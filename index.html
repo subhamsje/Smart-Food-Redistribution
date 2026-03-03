@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FoodFlow – Smart Food Redistribution</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+    --bg:#020617;
+    --glass:rgba(15,23,42,.75);
+    --border:rgba(255,255,255,.08);
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+    --green:#22c55e;
+    --cyan:#06b6d4;
+}
+
+*{box-sizing:border-box;font-family:system-ui,sans-serif}
+
+body{
+    margin:0;
+    background:
+        radial-gradient(circle at 10% 10%,#1e293b,transparent 45%),
+        radial-gradient(circle at 90% 90%,#020617,transparent 45%),
+        var(--bg);
+    color:var(--text);
+}
+
+.app{
+    display:grid;
+    grid-template-columns:260px 1fr;
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+    background:rgba(2,6,23,.9);
+    border-right:1px solid var(--border);
+    padding:24px;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:800;
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+    -webkit-background-clip:text;
+    color:transparent;
+    margin-bottom:30px;
+}
+
+.nav{
+    padding:12px 14px;
+    border-radius:12px;
+    color:var(--muted);
+    cursor:pointer;
+    transition:.35s;
+}
+
+.nav.active,
+.nav:hover{
+    color:var(--text);
+    background:rgba(255,255,255,.05);
+    transform:translateX(6px);
+}
+
+/* MAIN */
+.main{padding:30px}
+
+h1 span{
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+/* PAGE SYSTEM */
+.page{
+    display:none;
+    opacity:0;
+    transform:translateY(20px) scale(.98);
+    filter:blur(4px);
+}
+
+.page.active{
+    display:block;
+    animation:pageIn .55s ease forwards;
+}
+
+@keyframes pageIn{
+    to{opacity:1;transform:none;filter:none}
+}
+
+/* STATS */
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:18px;
+    margin:25px 0;
+}
+
+.stat{
+    background:var(--glass);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:18px;
+}
+
+.stat-title{font-size:13px;color:var(--muted)}
+.stat-value{font-size:30px;font-weight:800}
+
+/* CARD */
+.card{
+    background:var(--glass);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:24px;
+    transition:.4s;
+}
+
+.card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 20px 40px rgba(0,0,0,.3);
+}
+
+/* FORM */
+label{font-size:13px;color:var(--muted);margin-top:12px;display:block}
+
+input{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#020617;
+    color:var(--text);
+    transition:.3s;
+}
+
+input:focus{
+    outline:none;
+    border-color:var(--cyan);
+    box-shadow:0 0 0 3px rgba(6,182,212,.15);
+}
+
+button{
+    margin-top:16px;
+    width:100%;
+    padding:14px;
+    border-radius:999px;
+    border:none;
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+    font-weight:800;
+    cursor:pointer;
+    transition:.25s;
+}
+
+button:hover{
+    transform:scale(1.04);
+    box-shadow:0 0 20px rgba(34,197,94,.45);
+}
+
+/* FEED */
+.feed-item{
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+    animation:feedIn .4s ease forwards;
+}
+
+@keyframes feedIn{
+    from{opacity:0;transform:translateY(10px)}
+    to{opacity:1;transform:none}
+}
+
+.small{font-size:12px;color:var(--muted)}
+
+/* IMPACT */
+.progress{
+    height:12px;
+    background:rgba(255,255,255,.1);
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.progress-bar{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--green),var(--cyan));
+    transition:width 1.2s ease;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+    <div class="logo">🍱 FoodFlow</div>
+    <div class="nav active" onclick="showPage('dashboard',this)">Dashboard</div>
+    <div class="nav" onclick="showPage('donor',this)">Donor Portal</div>
+    <div class="nav" onclick="showPage('ngo',this)">NGO Feed</div>
+    <div class="nav" onclick="showPage('impact',this)">Impact</div>
+</aside>
+
+<main class="main">
+<h1>Smart <span>Food Redistribution</span></h1>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+<div class="stats">
+    <div class="stat"><div class="stat-title">Listings</div><div id="statListings" class="stat-value">0</div></div>
+    <div class="stat"><div class="stat-title">Food Saved (kg)</div><div id="statKg" class="stat-value">0</div></div>
+    <div class="stat"><div class="stat-title">People Fed</div><div id="statPeople" class="stat-value">0</div></div>
+</div>
+</section>
+
+<!-- DONOR -->
+<section id="donor" class="page">
+<div class="card">
+<h2>👨‍🍳 Donor Portal</h2>
+<form id="donorForm">
+<label>Name</label><input name="donor_name" required>
+<label>Food</label><input name="food_type" required>
+<label>Quantity (kg)</label><input name="quantity" type="number" step="0.1" required>
+<label>Location</label><input name="location" required>
+<label>Expiry</label><input name="expiry_date" type="date">
+<button>Publish</button>
+</form>
+<div id="donorMsg" class="small"></div>
+</div>
+</section>
+
+<!-- NGO -->
+<section id="ngo" class="page">
+<div class="card">
+<h2>🏥 NGO Feed</h2>
+
+<button onclick="clearNGOFeed()" style="background:#ef4444;margin-bottom:12px">
+    Clear NGO Feed
+</button>
+
+<div id="ngoFeed"></div>
+</div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact" class="page">
+<div class="card">
+<h2>📊 Impact Overview</h2>
+
+<p class="small">Food redistributed</p>
+<div class="progress"><div id="foodBar" class="progress-bar"></div></div>
+
+<p class="small">People reached</p>
+<div class="progress"><div id="peopleBar" class="progress-bar"></div></div>
+
+</div>
+</section>
+
+</main>
+</div>
+
+<script>
+const statListings = document.getElementById("statListings");
+const statKg = document.getElementById("statKg");
+const statPeople = document.getElementById("statPeople");
+
+function showPage(id,el){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+
+    document.querySelectorAll(".nav").forEach(n=>n.classList.remove("active"));
+    el.classList.add("active");
+
+    if(id==="impact"){
+        setTimeout(()=>{
+            foodBar.style.width="85%";
+            peopleBar.style.width="70%";
+        },150);
+    }
+}
+
+async function loadFeed(){
+    const res = await fetch("/api/listings");
+    const data = await res.json();
+
+    ngoFeed.innerHTML="";
+    let kg=0;
+
+    data.forEach(f=>{
+        kg+=f.quantity_kg;
+        ngoFeed.innerHTML+=`
+        <div class="feed-item">
+            <b>${f.food_type}</b> • ${f.quantity_kg} kg<br>
+            <span class="small">${f.donor_name} • ${f.location}</span><br>
+            <button onclick="requestFood(${f.id})">Request Pickup</button>
+        </div>`;
+    });
+
+    statListings.textContent=data.length;
+    statKg.textContent=kg.toFixed(1);
+    statPeople.textContent=Math.round(kg*2);
+}
+
+async function requestFood(id){
+    await fetch("/api/request",{
+        method:"POST",
+        body:new URLSearchParams({listing_id:id,ngo_name:"Helping Hands NGO"})
+    });
+    loadFeed();
+}
+
+function clearNGOFeed(){
+    if(!confirm("Clear all NGO feed logs?")) return;
+
+    ngoFeed.innerHTML="";
+    statListings.textContent=0;
+    statKg.textContent=0;
+    statPeople.textContent=0;
+}
+
+donorForm.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const res=await fetch("/api/listing",{method:"POST",body:new FormData(donorForm)});
+    const json=await res.json();
+    donorMsg.textContent=json.success?"✅ Posted successfully":"❌ Error";
+    donorForm.reset();
+    loadFeed();
+});
+
+loadFeed();
+</script>
+</body>
+</html>
